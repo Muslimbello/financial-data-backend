@@ -6,14 +6,12 @@ from datetime import datetime, timedelta
 
 
 def fetch_stock_data(symbol):
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=730)
     url = f"https://www.alphavantage.co/query"
     params = {
         "function": "TIME_SERIES_DAILY",
         "symbol": symbol,
         "apikey": " PAXV0Y4R8O7VOHFZ",
-        "outputsize": "full",
+        "outputsize": "compact",
     }
 
     response = requests.get(url, params=params)
@@ -26,7 +24,6 @@ def fetch_stock_data(symbol):
 
     for date_str, values in time_series.items():
         date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    if start_date <= date <= end_date:
         # Create or update stock data in the database
         StockData.objects.update_or_create(
             symbol=symbol,

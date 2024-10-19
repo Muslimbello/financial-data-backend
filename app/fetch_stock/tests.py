@@ -5,7 +5,7 @@ from .models import StockData
 
 
 class StockDataFetchTest(TestCase):
-    @patch("data_fetcher.views.requests.get")  # Mocking API requests
+    @patch("fetch_stock.views.requests.get")  # Mocking API requests
     def test_fetch_stock_data_success(self, mock_get):
         # Mock response from Alpha Vantage API
         mock_response = {
@@ -35,7 +35,7 @@ class StockDataFetchTest(TestCase):
         self.assertEqual(stock.low_price, 149.00)
         self.assertEqual(stock.volume, 2000000)
 
-    @patch("data_fetcher.views.requests.get")
+    @patch("fetch_stock.views.requests.get")
     def test_fetch_stock_data_failure(self, mock_get):
         mock_get.return_value.json.return_value = {"error": "Invalid API call"}
 
