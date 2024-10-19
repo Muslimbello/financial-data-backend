@@ -1,0 +1,27 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+psycopg2-binary = "*"
+requests = "*"
+pandas = "*"
+numpy = "*"
+scikit-learn = "*"
+joblib = "*"
+matplotlib = "*"
+plotly = "*"
+reportlab = "*"
+python-dotenv = "*"
+pytest = "*"
+pytest-django = "*"
+django-extensions = "*"
+django-cors-headers = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
