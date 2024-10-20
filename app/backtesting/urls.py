@@ -1,8 +1,6 @@
 from django.urls import path
-from .views import BacktestView
+from .views import run_backtest
 
 urlpatterns = [
-    path(
-        "run-backtest/<str:symbol>/", BacktestView.as_view(), name="run_backtest_view"
-    ),
+    path('backtest/', run_backtest, name='run_backtest'),
 ]

@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
-
+from django.utils import timezone
 
 class StockData(models.Model):
     symbol = models.CharField(max_length=10, db_index=True, help_text="Stock symbol ")
@@ -21,7 +21,7 @@ class StockData(models.Model):
     volume = models.BigIntegerField(
         validators=[MinValueValidator(0)], help_text="Volume of shares traded"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -31,12 +31,6 @@ class StockData(models.Model):
             models.Index(fields=["date"]),
         ]
         ordering = ["-date", "symbol"]
-        verbose_name = "Stock Data"
-        verbose_name_plural = "Stock Data"
-
     def __str__(self):
         return f"{self.symbol} - {self.date:%Y-%m-%d}"
 
-    def get_daily_change(self):
-        """Calculate daily price change percentage"""
-        return ((self.close_price - self.open_price) / self.open_price) * 100

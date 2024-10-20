@@ -1,46 +1,43 @@
-# services/data_processor.py
-from typing import Dict, List
-from datetime import datetime
-from decimal import Decimal
-from django.db import transaction
 from ..models import StockData
-import logging
-
-logger = logging.getLogger(__name__)
-
+from datetime import datetime
+from django.db import IntegrityError
+from typing import Dict, List
 
 class StockDataProcessor:
-    @staticmethod
-    def process_alpha_vantage_data(symbol: str, data: Dict) -> List[StockData]:
+    def process_alpha_vantage_data(self, symbol: str, data: Dict) -> List[StockData]:
         """
-        Process raw Alpha Vantage data and create StockData objects
+        Process the Alpha Vantage API response and save to database
+        Updates existing records or creates new ones
         """
-        stock_data_objects = []
+        processed_data = []
 
-        try:
-            with transaction.atomic():
-                for date_str, values in data.items():
-                    date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        if not data:
+            return processed_data
 
-                    stock_data = StockData(
-                        symbol=symbol,
-                        date=date,
-                        open_price=Decimal(values["1. open"]),
-                        close_price=Decimal(values["4. close"]),
-                        high_price=Decimal(values["2. high"]),
-                        low_price=Decimal(values["3. low"]),
-                        volume=int(values["5. volume"]),
-                    )
-                    stock_data_objects.append(stock_data)
+        for date_str, daily_data in data.items():
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-                # Bulk create with update on conflict
-                StockData.objects.bulk_create(
-                    stock_data_objects,
-                    update_conflicts=True,
+            try:
+                # Try to get existing record
+                stock_data, created = StockData.objects.update_or_create(
+                    symbol=symbol,
+                    date=date,
+                    defaults={
+                        'open_price': float(daily_data['1. open']),
+                        'high_price': float(daily_data['2. high']),
+                        'low_price': float(daily_data['3. low']),
+                        'close_price': float(daily_data['4. close']),
+                        'volume': int(daily_data['5. volume'])
+                    }
                 )
+                processed_data.append(stock_data)
 
-            return stock_data_objects
+            except IntegrityError as e:
+                # Log the error but continue processing
+                print(f"Error processing data for {symbol} on {date}: {str(e)}")
+                continue
+            except Exception as e:
+                print(f"Unexpected error processing {symbol} on {date}: {str(e)}")
+                continue
 
-        except Exception as e:
-            logger.error(f"Error processing data for {symbol}: {str(e)}")
-            raise
+        return processed_data
