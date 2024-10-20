@@ -1,6 +1,11 @@
-from django.urls import path
-from .views import fetch_data_view
+# urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import StockDataViewSet
+
+router = DefaultRouter()
+router.register(r"stocks", StockDataViewSet, basename="stockdata")
 
 urlpatterns = [
-    path("fetch-data/<str:symbol>/", fetch_data_view, name="fetch_data_view")
+    path("", include(router.urls)),
 ]

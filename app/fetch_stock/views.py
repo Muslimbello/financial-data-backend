@@ -1,57 +1,60 @@
-import requests
-from django.conf import settings
-from django.http import JsonResponse
+# views.py
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.core.exceptions import ValidationError
+from .services.alpha_vantage import AlphaVantageService
+from .services.data_processor import StockDataProcessor
+from .serializers.stock_serializers import StockDataSerializer
 from .models import StockData
-from datetime import datetime, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def fetch_stock_data(symbol):
-    # Calculate the date two years ago from today
-    end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=730)  # 730 days for approximately 2 years
+class StockDataViewSet(viewsets.ModelViewSet):
+    queryset = StockData.objects.all()
+    serializer_class = StockDataSerializer
+    lookup_field = "symbol"
 
-    # Define the API endpoint and parameters
-    url = "https://www.alphavantage.co/query"
-    params = {
-        "function": "TIME_SERIES_DAILY",
-        "symbol": symbol,
-        "apikey": "PAXV0Y4R8O7VOHFZ",
-        "outputsize": "full",  # Request the full dataset (up to 20 years)
-    }
+    @action(detail=False, methods=["post"])
+    def fetch_stock_data(self, request):
+        """
+        Fetch stock data for a given symbol
+        """
+        symbol = request.data.get("symbol")
+        days = request.data.get("days", 730)  # Default to 2 years
 
-    # Make the API request
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    # Check if the response is valid
-    if "Time Series (Daily)" not in data:
-        return {"error": "Invalid API response"}
-
-    time_series = data["Time Series (Daily)"]
-
-    # Filter the time series data to include only the last two years
-    for date_str, values in time_series.items():
-        date = datetime.strptime(date_str, "%Y-%m-%d").date()
-
-        # Check if the date is within the last two years
-        if start_date <= date <= end_date:
-            # Create or update stock data in the database
-            StockData.objects.update_or_create(
-                symbol=symbol,
-                date=date,
-                defaults={
-                    "open_price": values["1. open"],
-                    "close_price": values["4. close"],
-                    "high_price": values["2. high"],
-                    "low_price": values["3. low"],
-                    "volume": values["5. volume"],
-                },
+        if not symbol:
+            return Response(
+                {"error": "Symbol is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-    return {"status": "success"}
+        try:
+            # Fetch data from Alpha Vantage
+            alpha_vantage = AlphaVantageService()
+            stock_data = alpha_vantage.get_daily_stock_data(symbol, days)
 
+            if not stock_data:
+                return Response(
+                    {"error": "Failed to fetch stock data"},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
 
-# Sample view to trigger data fetching via API
-def fetch_data_view(request, symbol):
-    result = fetch_stock_data(symbol)
-    return JsonResponse(result)
+            # Process and save the data
+            processor = StockDataProcessor()
+            saved_data = processor.process_alpha_vantage_data(symbol, stock_data)
+
+            # Serialize and return the response
+            serializer = self.serializer_class(saved_data, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except ValidationError as e:
+            logger.error(f"Validation error for symbol {symbol}: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Unexpected error processing symbol {symbol}: {str(e)}")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
