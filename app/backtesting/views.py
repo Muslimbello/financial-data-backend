@@ -1,50 +1,40 @@
-# views.py
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .services.backtesting import SimpleBacktest
-from rest_framework import status
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
+from .services.Backtest import (
+    run_backtest,
+)  # Import the service from the services directory
 
-@api_view(['POST'])
-def run_backtest(request):
-    # Get parameters from request
-    symbol = request.data.get('symbol')
-    investment = request.data.get('investment')
 
-    # Basic validation
-    if not symbol:
-        return Response(
-            {'error': 'Please provide a stock symbol'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    if not investment:
-        return Response(
-            {'error': 'Please provide investment amount'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
+@require_http_methods(["POST"])
+def run_backtest_view(request):
     try:
-        investment = float(investment)
-        if investment <= 0:
-            return Response(
-                {'error': 'Investment must be positive'},
-                status=status.HTTP_400_BAD_REQUEST
+        # Parse JSON body
+        data = json.loads(request.body)
+        symbol = data.get("symbol")
+        investment_amount = data.get("investment_amount")
+        short_ma_days = data.get("short_ma_days", 50)  # default to 50 days
+        long_ma_days = data.get("long_ma_days", 200)  # default to 200 days
+
+        # Ensure required fields are provided
+        if not all([symbol, investment_amount]):
+            return JsonResponse(
+                {
+                    "error": "Missing required parameters: 'symbol' and 'investment_amount'"
+                },
+                status=400,
             )
-    except ValueError:
-        return Response(
-            {'error': 'Investment must be a number'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
 
-    try:
-        # Run backtest
-        backtest = SimpleBacktest(symbol, investment)
+        # Call the backtest service
+        backtest = run_backtest(symbol, investment_amount, short_ma_days, long_ma_days)
         results = backtest.run_backtest()
 
-        return Response(results, status=status.HTTP_200_OK)
+        # Return the backtest results as a JSON response
+        return JsonResponse(results)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
 
     except Exception as e:
-        return Response(
-            {'error': f'Something went wrong: {str(e)}'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        # Generic exception handler to return error message
+        return JsonResponse({"error": str(e)}, status=500)

@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TrainModelConfig(AppConfig):
+class ReportGeneratorConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'train_model'
+    name = 'report_generator'

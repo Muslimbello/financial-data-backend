@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
-from django.utils import timezone
+
 
 class StockData(models.Model):
     symbol = models.CharField(max_length=10, db_index=True, help_text="Stock symbol ")
@@ -31,6 +31,6 @@ class StockData(models.Model):
             models.Index(fields=["date"]),
         ]
         ordering = ["-date", "symbol"]
-    def __str__(self):
-        return f"{self.symbol} - {self.date:%Y-%m-%d}"
 
+    def __str__(self):
+        return f"{self.symbol} - {self.date}"

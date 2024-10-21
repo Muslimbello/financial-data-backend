@@ -26,8 +26,7 @@ SECRET_KEY = "django-insecure-)o7hmuxfe2%t#x!^6*5_2j_p^&c(^g^(qe*y29ox5i99969e#0
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']  # You can add '*' for development
-
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]  # You can add '*' for development
 
 
 # Application definition
@@ -41,7 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "fetch_stock",
-    "celery",
+    "backtesting",
+    "report_generator",
+    "predict_stock",
 ]
 
 MIDDLEWARE = [

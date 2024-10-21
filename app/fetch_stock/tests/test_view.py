@@ -10,9 +10,11 @@ class StockDataViewSetTest(APITestCase):
     def setUp(self):
         self.url = reverse("stockdata-fetch-stock-data")
 
-    @patch("fetch_data.services.alpha_vantage.AlphaVantageService.get_daily_stock_data")
-    def test_fetch_stock_data_success(self, mock_get_data):
-        mock_get_data.return_value = {
+    @patch(
+        "fetch_stock.services.alpha_vantage.AlphaVantageService.get_daily_stock_data"
+    )
+    def test_fetch_stock_data_success(self, get_data):
+        get_data.return_value = {
             "2024-01-01": {
                 "1. open": "150.00",
                 "4. close": "152.00",
