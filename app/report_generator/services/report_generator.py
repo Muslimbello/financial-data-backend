@@ -5,7 +5,8 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from fetch_stock.models import StockData
 from ...backtesting.services import Backtest
-from ...predict_stock.services import StockPredictor
+
+# from ...predict_stock.services import StockPredictor
 
 
 class ReportGenerator:
@@ -38,15 +39,15 @@ class ReportGenerator:
         )  # Assuming $10,000 initial investment
         backtest_results = backtest.run_backtest()
 
-        predictor = StockPredictor()
-        predictions = predictor.predict(self.stock_symbol)
+        # predictor = StockPredictor()
+        # predictions = predictor.predict(self.stock_symbol)
 
         plot = self.generate_plot()
 
         report_data = {
             "stock_symbol": self.stock_symbol,
             "backtest_results": backtest_results,
-            "predictions": predictions.tolist(),
+            # "predictions": predictions.tolist(),
             "plot": plot,
         }
 

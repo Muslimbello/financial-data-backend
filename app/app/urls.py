@@ -22,5 +22,4 @@ urlpatterns = [
     path("fetch-stock/", include("fetch_stock.urls")),
     path("backtesting/", include("backtesting.urls")),
     path("report_generator/", include("report_generator.urls")),
-    path("predict/", include("predict_stock.urls")),
 ]
