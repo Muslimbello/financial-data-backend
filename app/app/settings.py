@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "fetch_stock",
     "backtesting",
     "report_generator",
-    "predict_stock",
 ]
 
 MIDDLEWARE = [
