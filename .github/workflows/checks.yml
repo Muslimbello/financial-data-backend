@@ -22,7 +22,7 @@ jobs:
      POSTGRES_USER: postgres
      POSTGRES_PASSWORD: adewale@2007
     ports:
-     - 5432:5432
+     - 5433:5432
 
   steps:
    - name: Login to Docker Hub
