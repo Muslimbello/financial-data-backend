@@ -1,12 +1,10 @@
 version: '3.3'
-
 services:
   app:
     build:
       context: .
     image: app:latest
-    command: [ "python", "manage.py", "runserver", "0.0.0.0:8000"]
-
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     volumes:
       - ./app:/app
     environment:
@@ -14,10 +12,13 @@ services:
       - DB_NAME=financial_data
       - DB_USER=postgres
       - DB_PASSWORD=adewale@2007
+      - COMPOSE_HTTP_TIMEOUT=200
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    restart: unless-stopped
 
   db:
     image: postgres:latest
@@ -28,7 +29,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Changed port to avoid conflicts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+    driver: local
