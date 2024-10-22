@@ -18,11 +18,11 @@ jobs:
    db:
     image: postgres:latest
     env:
-     POSTGRES_DB: db
+     POSTGRES_DB: financial_data
      POSTGRES_USER: postgres
      POSTGRES_PASSWORD: adewale@2007
     ports:
-     - 5433:5432
+     - 5432:5432
 
   steps:
    - name: Login to Docker Hub
